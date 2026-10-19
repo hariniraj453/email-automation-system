@@ -11,8 +11,7 @@ def initialize_email_logs() -> None:
     DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
 
     with sqlite3.connect(DATABASE_PATH) as connection:
-        connection.execute(
-            """
+        connection.execute("""
             CREATE TABLE IF NOT EXISTS email_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 recipient TEXT NOT NULL,
@@ -21,8 +20,7 @@ def initialize_email_logs() -> None:
                 sent_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 error_message TEXT
             )
-            """
-        )
+            """)
 
 
 def add_email_log(
@@ -55,12 +53,10 @@ def get_email_logs() -> list[dict]:
 
     with sqlite3.connect(DATABASE_PATH) as connection:
         connection.row_factory = sqlite3.Row
-        rows = connection.execute(
-            """
+        rows = connection.execute("""
             SELECT id, recipient, subject, status, sent_at, error_message
             FROM email_logs
             ORDER BY id DESC
-            """
-        ).fetchall()
+            """).fetchall()
 
     return [dict(row) for row in rows]

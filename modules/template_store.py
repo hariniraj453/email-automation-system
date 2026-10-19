@@ -1,4 +1,3 @@
-
 """Save and manage email templates in SQLite."""
 
 import sqlite3
@@ -14,16 +13,14 @@ def initialize_templates() -> None:
     DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
 
     with sqlite3.connect(DATABASE_PATH) as connection:
-        connection.execute(
-            """
+        connection.execute("""
             CREATE TABLE IF NOT EXISTS email_templates (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL UNIQUE,
                 subject TEXT NOT NULL,
                 body TEXT NOT NULL
             )
-            """
-        )
+            """)
 
 
 def save_template(name: str, subject: str, body: str) -> None:
@@ -46,8 +43,7 @@ def get_templates() -> pd.DataFrame:
 
     with sqlite3.connect(DATABASE_PATH) as connection:
         return pd.read_sql_query(
-            "SELECT id, name, subject, body "
-            "FROM email_templates ORDER BY id DESC",
+            "SELECT id, name, subject, body " "FROM email_templates ORDER BY id DESC",
             connection,
         )
 
