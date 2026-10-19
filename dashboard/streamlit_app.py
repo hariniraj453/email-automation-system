@@ -1,10 +1,28 @@
+
+"""Streamlit dashboard for the Email Automation System."""
+
+import tempfile
 from pathlib import Path
 
+import pandas as pd
 import streamlit as st
 
 from modules.database import save_contacts
+from modules.email_logs import get_email_logs
 from modules.importer import import_file
 from modules.validator import validate_emails
+
+
+st.set_page_config(
+    page_title="Email Automation System",
+    page_icon="📧",
+    layout="wide",
+)
+
+st.title("📧 Email Automation System")
+st.write("Import contacts, validate email addresses, and review email logs.")
+
+# CSV / Excel Import
 st.header("📂 CSV / Excel Import")
 
 uploaded_file = st.file_uploader(
@@ -14,8 +32,6 @@ uploaded_file = st.file_uploader(
 
 if uploaded_file is not None:
     try:
-        import tempfile
-
         suffix = Path(uploaded_file.name).suffix.lower()
 
         with tempfile.NamedTemporaryFile(
@@ -63,12 +79,14 @@ if uploaded_file is not None:
                 validated_contacts["email_valid"]
             ].drop(columns=["email_valid"])
 
-            st.write(f"Total rows: {len(imported_contacts)}")
-            st.write(f"Valid email rows: {len(valid_contacts)}")
-            st.write(
-                f"Invalid email rows: "
-                f"{len(imported_contacts) - len(valid_contacts)}"
-            )
+            total_rows = len(imported_contacts)
+            valid_count = len(valid_contacts)
+            invalid_count = total_rows - valid_count
+
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Total Rows", total_rows)
+            col2.metric("Valid Emails", valid_count)
+            col3.metric("Invalid Emails", invalid_count)
 
             if st.button("Save Valid Contacts to Database"):
                 if valid_contacts.empty:
@@ -77,13 +95,59 @@ if uploaded_file is not None:
                     try:
                         save_contacts(valid_contacts)
                         st.success(
-                            "Valid contacts saved successfully! "
+                            "Valid contacts saved to the database. "
                             "Existing contacts are preserved and "
-                            "duplicate emails are removed."
+                            "duplicate email addresses are removed."
                         )
                         st.rerun()
                     except Exception as error:
-                        st.error(f"Could not save contacts: {error}")
+                        st.error(
+                            f"Could not save contacts: {error}"
+                        )
 
     except Exception as error:
         st.error(f"Could not import the file: {error}")
+
+
+st.divider()
+
+# Email Logs
+st.header("📨 Email Logs")
+
+try:
+    logs = get_email_logs()
+
+    if logs:
+        logs_df = pd.DataFrame(logs)
+
+        total_logs = len(logs_df)
+        sent_count = int((logs_df["status"] == "sent").sum())
+        failed_count = int((logs_df["status"] == "failed").sum())
+
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Total Attempts", total_logs)
+        col2.metric("Sent", sent_count)
+        col3.metric("Failed", failed_count)
+
+        st.dataframe(
+            logs_df,
+            use_container_width=True,
+            hide_index=True,
+        )
+
+        csv_data = logs_df.to_csv(index=False).encode("utf-8")
+
+        st.download_button(
+            "Download Email Logs as CSV",
+            data=csv_data,
+            file_name="email_logs.csv",
+            mime="text/csv",
+        )
+    else:
+        st.info(
+            "No email logs yet. Logs will appear here when "
+            "email attempts are recorded."
+        )
+
+except Exception as error:
+    st.error(f"Could not load email logs: {error}")
