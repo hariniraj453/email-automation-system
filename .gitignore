@@ -1,8 +1,13 @@
-.pytest_cache/
-data/
-venv/
-.venv/
+# Python generated files
 __pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+
+# Secrets and private data
 .env
 .env.*
 !.env.example
+data/
+.vscode/
