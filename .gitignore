@@ -11,3 +11,4 @@ venv/
 !.env.example
 data/
 .vscode/
+.pytest_cache/
