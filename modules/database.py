@@ -1,3 +1,4 @@
+
 """Store and manage contact records using SQLite."""
 
 import sqlite3
@@ -8,11 +9,40 @@ import pandas as pd
 DEFAULT_DATABASE = "data/contacts.db"
 
 
-def save_contacts(
+def _find_email_column(contacts: pd.DataFrame) -> str | None:
+    """Find the email column in a contact DataFrame."""
+    for column in contacts.columns:
+        if column.strip().lower() in {"email", "email_id"}:
+            return column
+    return None
+
+
+def _read_existing_contacts(database_path: str) -> pd.DataFrame:
+    """Read existing contacts, returning an empty DataFrame if absent."""
+    path = Path(database_path)
+
+    if not path.is_file():
+        return pd.DataFrame()
+
+    with sqlite3.connect(path) as connection:
+        table = connection.execute(
+            """
+            SELECT name FROM sqlite_master
+            WHERE type = 'table' AND name = 'contacts'
+            """
+        ).fetchone()
+
+        if table is None:
+            return pd.DataFrame()
+
+        return pd.read_sql_query("SELECT * FROM contacts", connection)
+
+
+def _write_contacts(
     contacts: pd.DataFrame,
-    database_path: str = DEFAULT_DATABASE,
+    database_path: str,
 ) -> None:
-    """Save imported contacts to the SQLite database."""
+    """Write the supplied contacts to the contacts table."""
     path = Path(database_path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -25,6 +55,52 @@ def save_contacts(
         )
 
 
+def save_contacts(
+    contacts: pd.DataFrame,
+    database_path: str = DEFAULT_DATABASE,
+) -> None:
+    """Merge contacts into storage without duplicating email addresses."""
+    existing = _read_existing_contacts(database_path)
+
+    if existing.empty:
+        combined = contacts.copy()
+    else:
+        combined = pd.concat(
+            [existing, contacts],
+            ignore_index=True,
+            sort=False,
+        )
+
+    email_column = _find_email_column(combined)
+
+    if email_column:
+        normalized_emails = (
+            combined[email_column]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+            .str.lower()
+        )
+
+        has_email = normalized_emails.ne("")
+        without_email = combined.loc[~has_email]
+        with_email = combined.loc[has_email].copy()
+
+        with_email["_email_key"] = normalized_emails.loc[has_email]
+        with_email = with_email.drop_duplicates(
+            subset="_email_key",
+            keep="first",
+        ).drop(columns="_email_key")
+
+        combined = pd.concat(
+            [with_email, without_email],
+            ignore_index=True,
+            sort=False,
+        )
+
+    _write_contacts(combined, database_path)
+
+
 def get_contacts(
     database_path: str = DEFAULT_DATABASE,
 ) -> pd.DataFrame:
@@ -35,17 +111,24 @@ def get_contacts(
         raise FileNotFoundError(f"Database not found: {path}")
 
     with sqlite3.connect(path) as connection:
-        return pd.read_sql_query(
-            "SELECT * FROM contacts",
-            connection,
-        )
+        table = connection.execute(
+            """
+            SELECT name FROM sqlite_master
+            WHERE type = 'table' AND name = 'contacts'
+            """
+        ).fetchone()
+
+        if table is None:
+            return pd.DataFrame()
+
+        return pd.read_sql_query("SELECT * FROM contacts", connection)
 
 
 def add_contact(
     contact: dict,
     database_path: str = DEFAULT_DATABASE,
 ) -> None:
-    """Add a contact and prevent duplicate email addresses."""
+    """Add a contact while preventing duplicate email addresses."""
     email_key = next(
         (
             key
@@ -58,48 +141,26 @@ def add_contact(
     if email_key is None:
         raise ValueError("Contact must contain an email or email_id field.")
 
-    email = str(contact[email_key]).strip().lower()
+    email = str(contact[email_key]).strip()
 
     if not email:
         raise ValueError("Email address cannot be empty.")
 
-    path = Path(database_path)
-    path.parent.mkdir(parents=True, exist_ok=True)
+    existing = _read_existing_contacts(database_path)
+    existing_email_column = _find_email_column(existing)
 
-    if path.is_file():
-        try:
-            existing = get_contacts(database_path)
-        except (sqlite3.Error, ValueError):
-            existing = pd.DataFrame()
-    else:
-        existing = pd.DataFrame()
-
-    if not existing.empty:
-        existing_email_key = next(
-            (
-                column
-                for column in existing.columns
-                if column.strip().lower() in {"email", "email_id"}
-            ),
-            None,
+    if existing_email_column:
+        emails = (
+            existing[existing_email_column]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+            .str.lower()
         )
+        if email.lower() in emails.values:
+            raise ValueError("This email address already exists.")
 
-        if existing_email_key:
-            emails = (
-                existing[existing_email_key]
-                .astype(str)
-                .str.strip()
-                .str.lower()
-            )
-            if email in emails.values:
-                raise ValueError("This email address already exists.")
-
-    new_contact = pd.DataFrame([contact])
-    combined = pd.concat(
-        [existing, new_contact],
-        ignore_index=True,
-    )
-    save_contacts(combined, database_path)
+    save_contacts(pd.DataFrame([contact]), database_path)
 
 
 def delete_contact(
@@ -108,20 +169,14 @@ def delete_contact(
 ) -> int:
     """Delete a contact by email and return the number deleted."""
     contacts = get_contacts(database_path)
-    email_key = next(
-        (
-            column
-            for column in contacts.columns
-            if column.strip().lower() in {"email", "email_id"}
-        ),
-        None,
-    )
+    email_column = _find_email_column(contacts)
 
-    if email_key is None:
+    if email_column is None:
         raise ValueError("No email column was found in the contacts table.")
 
     matches = (
-        contacts[email_key]
+        contacts[email_column]
+        .fillna("")
         .astype(str)
         .str.strip()
         .str.lower()
@@ -130,6 +185,7 @@ def delete_contact(
     deleted_count = int(matches.sum())
 
     if deleted_count:
-        save_contacts(contacts.loc[~matches].copy(), database_path)
+        remaining = contacts.loc[~matches].copy()
+        _write_contacts(remaining, database_path)
 
     return deleted_count
