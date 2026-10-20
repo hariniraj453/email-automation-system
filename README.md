@@ -1,41 +1,43 @@
-# Email Automation System
+# 📧 Email Automation System
 
-A Python-based project for importing contact data, validating email addresses, managing records with SQLite, and supporting email automation workflows through a Streamlit dashboard.
+A Python-based Email Automation System for importing contact data, validating email addresses, managing contacts with SQLite, and supporting personalized email workflows through a Streamlit dashboard.
 
-## Project Overview
+## 📌 Project Overview
 
-The Email Automation System simplifies contact data processing by combining CSV and Excel imports, email validation, database storage, and personalized email template preparation. The project is designed with reusable Python modules, automated tests, and a user-friendly dashboard.
+The Email Automation System simplifies contact management by combining CSV and Excel data import, email validation, database storage, personalized email templates, and email activity logs.
 
-## Features
+The project uses reusable Python modules and automated tests to support maintainability and reliable data processing.
 
-- **CSV Import:** Import contact records from CSV files.
-- **Excel Import:** Read contact data from Excel files.
+## ✨ Features
+
+- **CSV Import:** Import contact data from CSV files.
+- **Excel Import:** Import contact data from Excel files.
 - **Data Cleaning:** Normalize column names and remove surrounding whitespace.
 - **Email Validation:** Validate email address formats.
-- **SQLite Database:** Store, retrieve, and manage contact records.
-- **Contact Management:** Add, view, and delete contacts through the dashboard.
+- **SQLite Database:** Store and retrieve contact records.
+- **Contact Management:** Add, view, search, and delete contacts through the dashboard.
 - **Email Templates:** Prepare personalized email subjects and message bodies.
-- **Streamlit Dashboard:** Access supported application features through a visual interface.
-- **Email Logs:** View recorded email statuses and failures, where logging is implemented.
-- **Automated Testing:** Use Pytest to test application components.
+- **Streamlit Dashboard:** Interact with supported features through a visual interface.
+- **Email Logs:** View recorded email attempts, statuses, and error messages.
+- **Automated Testing:** Test project functionality using Pytest.
 - **Code Quality:** Use Black and Ruff to maintain consistent Python code.
 
-*Note: Email sending and other features should be considered complete only after they have been implemented and tested successfully.*
+> Features such as actual email delivery should be considered complete only after they have been implemented and tested successfully.
 
-## Technology Stack
+## 🛠️ Technology Stack
 
 - Python
 - Pandas
 - SQLite
 - OpenPyXL
 - Streamlit
+- SMTP, if configured for email delivery
 - Pytest
 - Black
 - Ruff
 - Git and GitHub
-- SMTP, if configured for email delivery
 
-## Project Structure
+## 📂 Project Structure
 
 ```text
 email-automation-system/
@@ -46,8 +48,7 @@ email-automation-system/
 │   ├── validator.py
 │   ├── database.py
 │   ├── template_engine.py
-│   ├── email_sender.py
-│   └── ...
+│   └── email_sender.py
 ├── tests/
 ├── data/
 ├── app.py
@@ -57,9 +58,9 @@ email-automation-system/
 └── README.md
 ```
 
-The structure above is illustrative. Your actual repository may contain additional modules and files.
+*Note: This is an illustrative structure. Your repository may contain additional modules and files.*
 
-## Installation and Setup
+## 🚀 Installation and Setup
 
 ### 1. Clone the Repository
 
@@ -85,7 +86,7 @@ python -m pip install -r requirements.txt
 
 ### 4. Prepare Contact Data
 
-Prepare a CSV or Excel file with suitable contact columns, such as:
+Prepare a CSV or Excel file with the columns required by your application, such as:
 
 - Name
 - Email
@@ -93,43 +94,53 @@ Prepare a CSV or Excel file with suitable contact columns, such as:
 
 Use synthetic sample data when testing or demonstrating the application.
 
-### 5. Configure Email Settings
+## ▶️ Running the Application
 
-If SMTP email sending is implemented, copy `.env.example` to `.env` and provide your own authorized SMTP configuration.
+### Launch the Streamlit Dashboard
 
-Example:
-
-```dotenv
-SMTP_HOST=your_smtp_host
-SMTP_PORT=587
-SMTP_USERNAME=your_email_address
-SMTP_PASSWORD=your_app_password
-SENDER_EMAIL=your_email_address
-```
-
-Never upload your actual `.env` file, credentials, or app passwords to GitHub.
-
-## Running the Application
-
-### Run the Streamlit Dashboard
-
-From the project root, run:
+Run this command from the project root:
 
 ```bash
 python -m streamlit run dashboard/streamlit_app.py
 ```
 
-Open the local URL displayed in the terminal.
+Open the local URL displayed in your terminal.
 
 ### Run the Command-Line Application
 
-If `app.py` is configured as a working command-line entry point, run:
+If `app.py` is configured as a working entry point, run:
 
 ```bash
 python app.py
 ```
 
-## Testing
+## 📸 Application Screenshots
+
+### 1. Dashboard Overview
+
+The dashboard displays recipient statistics and provides the contact import interface.
+
+![Dashboard Overview](screenshots/dashboard-overview.png)
+
+### 2. Contact Management
+
+View and search contact records managed by the application.
+
+![Contact Management](screenshots/contact-management.png)
+
+### 3. Add and Delete Contacts
+
+Add new contacts or delete existing records through the dashboard.
+
+![Add and Delete Contacts](screenshots/add-delete-contact.png)
+
+### 4. Email Logs
+
+Review recorded email attempts, sending statuses, and error messages.
+
+![Email Logs](screenshots/email-logs.png)
+
+## 🧪 Testing
 
 Run the automated tests:
 
@@ -137,7 +148,7 @@ Run the automated tests:
 python -m pytest -v
 ```
 
-Check code formatting:
+Check Python formatting:
 
 ```bash
 python -m black --check .
@@ -149,47 +160,29 @@ Check code quality:
 python -m ruff check .
 ```
 
-## Dashboard Screenshots
-
-Add screenshots of your working dashboard to a `screenshots/` directory and display them here.
-
-Example:
-
-```markdown
-![Email Automation Dashboard](screenshots/dashboard.png)
-```
-
-Additional screenshots can demonstrate data import, contact management, and email logs. Ensure screenshots do not expose personal contact information or credentials.
-
-## Privacy and Security
+## 🔐 Privacy and Security
 
 - Use synthetic contact data for development and demonstrations.
 - Store credentials in environment variables.
-- Keep `.env`, private datasets, database files, and virtual environments out of Git.
-- Never commit passwords, app passwords, API keys, or personal contact information.
+- Keep `.env` files, passwords, API keys, and private contact data out of GitHub.
+- Do not commit real contact databases or unnecessary generated files.
 - Use authorized SMTP accounts when testing email delivery.
 
-## Project Status
+## 🔮 Future Improvements
 
-The project covers contact data import, email-format validation, SQLite storage, reusable modules, and automated testing.
-
-The Streamlit dashboard provides a visual interface for the features implemented in the repository. Email delivery and any additional functionality should be reported as complete only after successful implementation and testing.
-
-## Future Improvements
-
-- Automated testing with GitHub Actions.
+- Automated testing through GitHub Actions.
 - Improved email template customization.
 - Scheduled email workflows.
-- Enhanced reporting and dashboard analytics.
-- More comprehensive validation and error-handling tests.
+- Enhanced dashboard reporting and analytics.
+- Additional validation and error-handling tests.
 
-## Author
+## 👩‍💻 Author
 
 **Harini R.**
 
-- GitHub: https://github.com/hariniraj453
-- LinkedIn: https://linkedin.com/in/harini-r-492ba0328
+- GitHub: [hariniraj453](https://github.com/hariniraj453)
+- LinkedIn: [Harini R.](https://linkedin.com/in/harini-r-492ba0328)
 
-## License
+## 📄 License
 
 A license can be added if you intend to specify how others may use, modify, and distribute this project.
